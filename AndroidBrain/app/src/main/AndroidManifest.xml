@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AndroidBrain">
+        <activity
+            android:name=".MathGame.MathGameMainGame"
+            android:exported="false" />
+        <activity
+            android:name=".MathGame.MathGameProfile"
+            android:exported="false" />
+        <activity
+            android:name=".MathGame.MathGameHome"
+            android:exported="false" />
+        <activity
+            android:name=".FireBasePractice.FireBaseMainPage"
+            android:exported="false" />
+        <activity
+            android:name=".FireBasePractice.ProductDetails"
+            android:exported="false" />
+        <activity
+            android:name=".FibonacciPrinter"
+            android:exported="false" />
+        <activity
+            android:name=".FireBasePractice.ViewAllProducts"
+            android:exported="false" />
+        <activity
+            android:name=".FireBasePractice.AddProductsPage"
+            android:exported="false" />
+        <activity
+            android:name=".FireBasePractice.ProductsMainPage"
+            android:exported="false" />
+        <activity
+            android:name=".PalindromeChecker"
+            android:exported="false" />
+        <activity
+            android:name=".WordScrambleGame"
+            android:exported="false" />
+        <activity
+            android:name=".UnitConverter"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MathGame.MathGameRegister"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
