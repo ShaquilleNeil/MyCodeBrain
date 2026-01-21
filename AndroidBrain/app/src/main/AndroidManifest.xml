@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidBrain">
         <activity
+            android:name=".NumberAnalyzer.NumberAnalyzer"
+            android:exported="false" />
+        <activity
             android:name=".MathGame.MathGameMainGame"
             android:exported="false" />
         <activity
@@ -48,10 +51,10 @@
             android:name=".UnitConverter"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".MathGame.MathGameRegister"
             android:exported="false" />
         <activity
-            android:name=".MathGame.MathGameRegister"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
