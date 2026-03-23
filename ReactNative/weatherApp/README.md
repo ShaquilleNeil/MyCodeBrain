@@ -100,7 +100,7 @@ weather-app/
 
 ## 📌 Author
 
-Built by Your Name  
+Built by Shaquille O Neil
 React Native Developer 🚀
 
 
