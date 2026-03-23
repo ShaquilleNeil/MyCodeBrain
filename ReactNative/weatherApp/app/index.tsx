@@ -1,14 +1,15 @@
 import { Button, Text, TextInput, View, StyleSheet, ImageBackground, Alert } from "react-native";
-import { ProgressBarAndroid } from "react-native";
 import { useState } from 'react';
 import { useEffect } from 'react';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
-
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import ForecastCard from "../components/forecast";
 import StatCard from "../components/statCard";
+import LottieView from 'lottie-react-native';
+import Rive from 'rive-react-native';
+
+import { Asset } from "expo-asset";
 
 
 interface WeatherData {
@@ -20,6 +21,7 @@ interface WeatherData {
  humidity: number;
  windSpeed: number;
  visibility: number;
+ main: string;
 
 }
 
@@ -40,15 +42,20 @@ interface iconCode {
 
 
 
+
 export default function Index() {
 
   const [city, setCity] = useState(null);
   const [weather, setWeather] = useState<WeatherData | null>( null);
   const [forecast, setForecast] = useState<ForecastData[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const bgColors = getBackground(weather?.main || "Clear");
+  const [riveUri, setRiveUri] = useState<string | null>(null);
+  
  
 
   useEffect(() => {
+   
    getLocation();
   }, []);
 
@@ -72,12 +79,13 @@ export default function Index() {
       {
         city: city,
         temp: temperature,
-        temp_min: data.main.temp_min.toFixed(0),
-        temp_max: data.main.temp_max.toFixed(0),
+        temp_min: Number(data.main.temp_min.toFixed(0)),
+temp_max: Number(data.main.temp_max.toFixed(0)),
         description: descriptionCapitalized,
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,
-        visibility: data.visibility
+        visibility: data.visibility,
+        main: data.weather[0].main
 
    
       }
@@ -167,6 +175,29 @@ export default function Index() {
   }
 
 
+  function getWeatherAnimation(main: string) {
+    switch (main) {
+      case "Rain":
+        return require("../assets/animations/Rain.json");
+      case "Mist":
+         return require("../assets/animations/mist.json");
+      case "Drizzle":
+        return require("../assets/animations/Rain.json");
+  
+      case "Snow":
+        return require("../assets/animations/snow.json");
+  
+      case "Clear":
+        return require("../assets/animations/sun.json");
+  
+      case "Clouds":
+        return require("../assets/animations/clouds.json");
+  
+      default:
+        return null;
+    }
+  }
+
   async function getLocation(){
     const { status } = await Location.requestForegroundPermissionsAsync();
 
@@ -201,7 +232,8 @@ export default function Index() {
           description: descriptionCapitalized,
           humidity: data.main.humidity,
           windSpeed: data.wind.speed,
-          visibility: data.visibility
+          visibility: data.visibility,
+          main: data.weather[0].main
   
      
         }
@@ -219,124 +251,239 @@ export default function Index() {
    
   }
 
-  return (
-    <LinearGradient
-    colors={['#0B1D3A', '#132F5C']}
-      style={{
-        padding: 10,
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100%"
-      }}
-    >
+  function getBackground(main: string) {
+    switch (main) {
+      case "Clear":
+        return ["#4facfe", "#00f2fe"]; // sunny blue
+  
+      case "Clouds":
+        return ["#757F9A", "#D7DDE8"]; // cloudy grey
+  
+      case "Rain":
+      case "Drizzle":
+        return ["#314755", "#26a0da"]; // rainy dark blue
+  
+      case "Thunderstorm":
+        return ["#141E30", "#243B55"]; // storm
+  
+      case "Snow":
+        return ["#E6DADA", "#274046"]; // snowy
+  
+      default:
+        return ["#0B1D3A", "#132F5C"]; // fallback
+    }
+  }
 
-{/* Search Bar//////////////////////////////////////////////////////////////////////////////////////////////////////  */}
-<TextInput
+
+
+ 
+
+  return (
+   
+     
+      <View style={{ flex: 1 }}>
+  
+  {/* 🔥 TOP HALF */}
+  <View style={{ flex: 1 }}>
+
+    <LinearGradient
+      colors={bgColors}
+      style={{
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+      }}
+    />
+
+    {weather?.main && (
+      <LottieView
+        source={getWeatherAnimation(weather.main)}
+        autoPlay
+        loop
+        resizeMode="cover"
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          opacity: 0.3
+        }}
+      />
+
+
+    
+    )}
+
+{riveUri && (
+  <Rive
+    url={riveUri}
+    style={{ width: 200, height: 200 }}
+  />
+)}
+
+    {/* Search */}
+    <TextInput
       style={styles.input}
       onChangeText={newText => setCity(newText)}
       value={city}
       placeholder="Enter a City"
       placeholderTextColor="black"
       backgroundColor="#ffffff"
-      onSubmitEditing={() => {fetchWeather(); fetchForecast(city)}}
-       />
+      onSubmitEditing={() => {
+        fetchWeather();
+        fetchForecast(city);
+      }}
+    />
+
+    {/* Temp Section */}
+    <View
+  style={{
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  }}
+>
+  <View style={{ alignItems: "center", gap: 5 }}>
+    
+    {/* City */}
+    <Text style={{ color: "#F4A88B", fontSize: 28, top: 25 }}>
+      {weather?.city}
+    </Text>
+
+    {/* Big Temp */}
+    <Text style={styles.bigTemp}>
+      {weather?.temp}{weather ? "°" : ""}
+    </Text>
+
+    {/* Description */}
+    <Text style={styles.environment}>
+      {weather?.description}
+    </Text>
+
+    {/* High / Low */}
+    <View
+      style={{
+        flexDirection: "row",
+        gap: 20,
+        marginTop: 5
+      }}
+    >
+      <Text style={{ color: "#ffffff", fontWeight: "bold", fontSize: 16 }}>
+        H: {weather?.temp_max}°
+      </Text>
+      <Text style={{ color: "#ffffff", fontWeight: "bold", fontSize: 16
+        
+       }}>
+        L: {weather?.temp_min}°
+      </Text>
+    </View>
+
+  </View>
+</View>
 
 
-{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
+    <LinearGradient
+    colors={[
+      "transparent",
+      "rgba(11,29,58,0.4)",
+      "#0B1D3A"
+    ]}
+    style={{
+      position: "absolute",
+      bottom: 0,
+      width: "100%",
+      height: 150
+    }}
+  />
+
+  </View>
+
+  {/* 🔥 BOTTOM HALF */}
+ 
+  <View style={{
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#0B1D3A"
+  }}>
+
+    {/* Forecast */}
+    {weather && (
+      <View style={{
+        backgroundColor: "#1C2A44",
+        borderRadius: 20,
+        padding: 20
+      }}>
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: 15
+        }}>
+          <Text style={{ color: "#aaa", fontWeight: "bold" }}>
+            WEEKLY FORECAST
+          </Text>
+          <Text style={{ color: "#F4A88B" }}>
+            LIVE UPDATES
+          </Text>
+        </View>
+
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "space-between"
+        }}>
+          {forecast?.map((item, index) => (
+            <ForecastCard
+              key={index}
+              day={item.day}
+              temp={item.temp}
+              main={item.main}
+            />
+          ))}
+        </View>
+      </View>
+    )}
+
+    {/* Stats */}
+    {weather && (
+      <View style={{
+        flexDirection: "row",
+        gap: 10,
+        marginTop: 20
+      }}>
+        <StatCard
+          icon="water-drop"
+          label="Humidity"
+          value={weather.humidity}
+          
+        />
+
+        <StatCard
+          icon="air"
+          label="Wind Speed"
+          value={weather.windSpeed}
+         
+        />
+      </View>
+    )}
+
+    {/* Visibility */}
+    <View style={{
+      flexDirection: "row",
+      marginTop: 10,
+      height: 100
+    }}>
+      <StatCard
+        icon="visibility"
+        label="Visibility"
+        value={weather?.visibility / 1000}
+       
+      />
+    </View>
+
+  </View>
+
+</View>
+     
       
   
-
-
-
-        
-    {/* Temp, city and description  //////////////////////////////////////////////////////////////////////////  */}
-<View style={{flexDirection: "row", justifyContent: "space-between", width: "100%", padding: 10, borderRadius: 20}}>
-  <View>
-    <Text style={{color: "#F4A88B"}}>{weather?.city}</Text>
-  <Text style={styles.bigTemp}>{weather?.temp} {weather? "°" : null}</Text>
-  </View>
-
-
-<View style={{justifyContent: "center", alignItems: "center"}}>
-
-     <Text style={styles.environment}>{weather?.description}</Text>
-      <View style={{flexDirection: "row", justifyContent: "space-between", width: "50%"}}> 
-        <Text>{weather? "H:" : null} {weather?.temp_max} {weather? "°" : null}</Text>
-        <Text>{weather? "L:" : null} {weather?.temp_min} {weather? "°" : null}</Text>
-        
-           </View>
-      
-     </View>
-
-</View>
-{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
-
-
-
-{/* Forecast //////////////////////////////////////////////////////////////////////////////////////////////////////  */}
-<View>
-{weather?
-<View style={{ backgroundColor: "#1C2A44", borderRadius: 20, padding: 20 }}>
-
-
-
-<View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 15, width: "100%" }}>
-  <Text style={{ color: "#aaa", fontWeight: "bold" }}>{weather? "24-HOUR FORECAST" : null}</Text>
-  <Text style={{ color: "#F4A88B" }}>{weather? "LIVE UPDATES" : null}</Text>
-</View> 
-
-
-{/* Forecast Row */}
-<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-{forecast?.map((item, index) => (
-  <ForecastCard
-    key={index}
-    day={item.day}
-    temp={item.temp}
-    main={item.main}
-  />
-))}
-</View>
-
-</View>
-: null}
-</View>
-{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
-
-
-{/* Humidity and Wind Speed /////////////////////////////////////////////////////////////////////////////////////// */}
-{weather && (
-  <View
-    style={{
-      flexDirection: "row",
-      justifyContent: "space-between",
-      width: "100%",
-      gap: 20,
-      padding: 5
-    }}
-  >
-    <StatCard
-      icon="water-drop"
-      label="Humidity"
-      value={weather.humidity}
-    />
-
-    <StatCard
-      icon="air"
-      label="Wind Speed"
-      value={weather.windSpeed}
-    />
-  </View>
-)}
-{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
-      
-
-
-
-     
-     
-      
-    </LinearGradient>
   );
 }
 
@@ -345,11 +492,14 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "black",
-    borderRadius: 10,
+    borderRadius: 20,
     width: "60%",
     marginBottom: 20,
     padding: 10,
-  opacity: 1,
+    position: "absolute",
+    top: 50,
+    right: 10,
+  opacity: 0.8
 
   
     
@@ -377,11 +527,12 @@ const styles = StyleSheet.create({
   bigTemp: {
     color: "white",
     fontSize: 100,
-    fontFamily: "Lato-Black"
+    fontFamily: "Lato-Black",
+    
   },
 
   environment: {
-    fontSize: 30,
+    fontSize: 25,
     color: "white",
     fontFamily: "Lato-Black"
   }

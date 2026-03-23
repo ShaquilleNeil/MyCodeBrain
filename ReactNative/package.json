@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "react-native-progress": "^5.0.1"
+    "react-native-paper": "^5.15.0"
   }
 }
