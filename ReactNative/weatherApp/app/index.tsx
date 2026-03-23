@@ -1,10 +1,14 @@
-import { Button, Text, TextInput, View, StyleSheet, ImageBackground } from "react-native";
+import { Button, Text, TextInput, View, StyleSheet, ImageBackground, Alert } from "react-native";
+import { ProgressBarAndroid } from "react-native";
 import { useState } from 'react';
 import { useEffect } from 'react';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
 
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import ForecastCard from "../components/forecast";
+import StatCard from "../components/statCard";
 
 
 interface WeatherData {
@@ -14,7 +18,8 @@ interface WeatherData {
  temp_max: number;
  description: string;
  humidity: number;
- windSpeed: number
+ windSpeed: number;
+ visibility: number;
 
 }
 
@@ -25,6 +30,7 @@ interface ForecastData {
   temp_max: number;
   description: string;
   main: string;
+ 
 }
 
 interface iconCode {
@@ -36,21 +42,25 @@ interface iconCode {
 
 export default function Index() {
 
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState(null);
   const [weather, setWeather] = useState<WeatherData | null>( null);
   const [forecast, setForecast] = useState<ForecastData[] | null>(null);
+  const [loading, setLoading] = useState(false);
  
 
   useEffect(() => {
-   
-  })
+   getLocation();
+  }, []);
 
   async function fetchWeather() {
+
+   try {
+    setLoading(true);
 
     const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=261684320267de715701e47c677a8f05`);
     const data = await response.json();
 
-    const temperature = data.main.temp.toFixed(0);
+    const temperature = Math.round(data.main.temp);
     const description = data.weather[0].description;
 
     
@@ -66,21 +76,32 @@ export default function Index() {
         temp_max: data.main.temp_max.toFixed(0),
         description: descriptionCapitalized,
         humidity: data.main.humidity,
-        windSpeed: data.wind.speed
+        windSpeed: data.wind.speed,
+        visibility: data.visibility
 
    
       }
     );
+   }
+   catch (error) {
+    console.error("Error fetching weather:", error);
+   } finally {
+     setLoading(false);
+   }
 
   }
 
 
-  async function fetchForecast() {
+  async function fetchForecast(city: string) {
     const response = await fetch(
       `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=261684320267de715701e47c677a8f05`
     );
     const data = await response.json();
   
+    if (!data.list) {
+      console.log("Forecast API failed:", data);
+      return;
+    }
     // 1. Keep one entry per day (12:00)
     const daily = data.list.filter((item: any) =>
       item.dt_txt.includes("12:00:00")
@@ -88,7 +109,7 @@ export default function Index() {
 
     const today = new Date().toISOString().split("T")[0];
   
-    // 2. Map to your ForecastData structure
+    
     const forecastData = daily.map((item: any) => {
       const day = new Date(item.dt_txt).toLocaleDateString("en-US", {
         weekday: "short",
@@ -101,6 +122,8 @@ export default function Index() {
         temp_max: Number(item.main.temp_max.toFixed(0)),
         description: item.weather[0].description,
         main: item.weather[0].main
+      
+
       };
     });
   
@@ -144,8 +167,56 @@ export default function Index() {
   }
 
 
-  function moveSearchBar(){
+  async function getLocation(){
+    const { status } = await Location.requestForegroundPermissionsAsync();
 
+
+    if(status !== 'granted'){
+      Alert.alert('Location permission denied');
+      return;
+    }
+
+    try {
+      const location = await Location.getCurrentPositionAsync();
+   
+      const { latitude, longitude } = location.coords;
+
+      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=261684320267de715701e47c677a8f05`);
+      const data = await response.json();
+  
+      const temperature = Math.round(data.main.temp);
+      const description = data.weather[0].description;
+  
+      
+       const words = description.split(" ");
+      const descriptionCapitalized = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+      
+     
+      setWeather(
+        {
+          city: data.name,
+          temp: temperature,
+          temp_min: data.main.temp_min.toFixed(0),
+          temp_max: data.main.temp_max.toFixed(0),
+          description: descriptionCapitalized,
+          humidity: data.main.humidity,
+          windSpeed: data.wind.speed,
+          visibility: data.visibility
+  
+     
+        }
+      );
+
+      setCity(data.name);
+      await fetchForecast(data.name);
+    }
+    catch (error) {
+      Alert.alert('Error getting location');
+      console.error("Error fetching location:", error);
+      return;
+    }
+
+   
   }
 
   return (
@@ -159,7 +230,7 @@ export default function Index() {
       }}
     >
 
-
+{/* Search Bar//////////////////////////////////////////////////////////////////////////////////////////////////////  */}
 <TextInput
       style={styles.input}
       onChangeText={newText => setCity(newText)}
@@ -167,19 +238,22 @@ export default function Index() {
       placeholder="Enter a City"
       placeholderTextColor="black"
       backgroundColor="#ffffff"
-      onSubmitEditing={() => {fetchWeather(); fetchForecast()}}
+      onSubmitEditing={() => {fetchWeather(); fetchForecast(city)}}
        />
 
 
-
+{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
       
   
+
+
+
         
-       
+    {/* Temp, city and description  //////////////////////////////////////////////////////////////////////////  */}
 <View style={{flexDirection: "row", justifyContent: "space-between", width: "100%", padding: 10, borderRadius: 20}}>
   <View>
     <Text style={{color: "#F4A88B"}}>{weather?.city}</Text>
-  <Text style={styles.bigTemp}>{weather?.temp} {weather? "°" : ""}</Text>
+  <Text style={styles.bigTemp}>{weather?.temp} {weather? "°" : null}</Text>
   </View>
 
 
@@ -187,87 +261,77 @@ export default function Index() {
 
      <Text style={styles.environment}>{weather?.description}</Text>
       <View style={{flexDirection: "row", justifyContent: "space-between", width: "50%"}}> 
-        <Text>{weather? "H:" : ""} {weather?.temp_max} {weather? "°" : ""}</Text>
-        <Text>{weather? "L:" : ""} {weather?.temp_min} {weather? "°" : ""}</Text>
+        <Text>{weather? "H:" : null} {weather?.temp_max} {weather? "°" : null}</Text>
+        <Text>{weather? "L:" : null} {weather?.temp_min} {weather? "°" : null}</Text>
         
            </View>
       
      </View>
 
 </View>
+{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
 
 
+
+{/* Forecast //////////////////////////////////////////////////////////////////////////////////////////////////////  */}
 <View>
-
-
-
 {weather?
 <View style={{ backgroundColor: "#1C2A44", borderRadius: 20, padding: 20 }}>
 
 
 
 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 15, width: "100%" }}>
-  <Text style={{ color: "#aaa", fontWeight: "bold" }}>{weather? "24-HOUR FORECAST" : ""}</Text>
-  <Text style={{ color: "#F4A88B" }}>{weather? "LIVE UPDATES" : ""}</Text>
+  <Text style={{ color: "#aaa", fontWeight: "bold" }}>{weather? "24-HOUR FORECAST" : null}</Text>
+  <Text style={{ color: "#F4A88B" }}>{weather? "LIVE UPDATES" : null}</Text>
 </View> 
 
 
 {/* Forecast Row */}
 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-{forecast?.map((item, index) => {
-  const ui = getWeatherUI(item.main);
-
-  return (
-    <View key={index} style={{ alignItems: "center", flex: 1, gap: 10 }}>
-      <Text style={{ color: "#aaa" }}>{item.day}</Text>
-      <Icon name={ui.icon} size={24} color={ui.color} />
-      <Text style={{ color: "white", fontSize: 18 }}>{item.temp}°</Text>
-    </View>
-  );
-})}
+{forecast?.map((item, index) => (
+  <ForecastCard
+    key={index}
+    day={item.day}
+    temp={item.temp}
+    main={item.main}
+  />
+))}
 </View>
 
-
-
-
-
 </View>
-: " "}
-
-
-{weather? 
-<View style={{ flexDirection: "row", justifyContent: "space-between", width: "50%", gap: 20, padding: 5}}>
-<View
-style={styles.cardHumidity}>
-
-<Text style={{
-  fontSize: 20,
-  color: "#ffffff",
-  marginBottom: 10
-}}>Humidity</Text>
-<Text style={{ color: "#ffffff", fontSize: 50}}>{weather?.humidity}</Text>
+: null}
 </View>
-
-<View
-style={styles.cardHumidity}>
-
-<Text style={{
-  fontSize: 20,
-  color: "#ffffff",
-  marginBottom: 10
-}}>Wind Speed</Text>
-<Text style={{ color: "#ffffff", fontSize: 50}}>{weather?.windSpeed}</Text>
-</View>
+{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
 
 
-</View>
+{/* Humidity and Wind Speed /////////////////////////////////////////////////////////////////////////////////////// */}
+{weather && (
+  <View
+    style={{
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+      gap: 20,
+      padding: 5
+    }}
+  >
+    <StatCard
+      icon="water-drop"
+      label="Humidity"
+      value={weather.humidity}
+    />
 
-: " "}
-
-
-</View>
+    <StatCard
+      icon="air"
+      label="Wind Speed"
+      value={weather.windSpeed}
+    />
+  </View>
+)}
+{/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
       
-     
+
+
 
      
      
