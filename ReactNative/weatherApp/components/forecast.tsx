@@ -40,7 +40,7 @@ export default function ForecastCard({
     <View style={{ alignItems: "center", flex: 1, gap: 10 }}>
       <Text style={{ color: "#aaa" }}>{day}</Text>
       <Icon name={ui.icon} size={24} color={ui.color} />
-      <Text style={{ color: "white", fontSize: 18 }}>{temp}°</Text>
+      <Text style={{ color: "white", fontSize: 18 }}>{temp}°C</Text>
     </View>
   );
 }

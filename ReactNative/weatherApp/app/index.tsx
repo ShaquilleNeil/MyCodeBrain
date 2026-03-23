@@ -1,4 +1,4 @@
-import { Button, Text, TextInput, View, StyleSheet, ImageBackground, Alert } from "react-native";
+import { Text, TextInput, View, StyleSheet, Alert } from "react-native";
 import { useState } from 'react';
 import { useEffect } from 'react';
 import Icon from '@expo/vector-icons/MaterialIcons';
@@ -7,9 +7,7 @@ import * as Location from 'expo-location';
 import ForecastCard from "../components/forecast";
 import StatCard from "../components/statCard";
 import LottieView from 'lottie-react-native';
-import Rive from 'rive-react-native';
 
-import { Asset } from "expo-asset";
 
 
 interface WeatherData {
@@ -50,7 +48,8 @@ export default function Index() {
   const [forecast, setForecast] = useState<ForecastData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const bgColors = getBackground(weather?.main || "Clear");
-  const [riveUri, setRiveUri] = useState<string | null>(null);
+  const isInitialLoad = loading && !weather;
+
   
  
 
@@ -64,8 +63,18 @@ export default function Index() {
    try {
     setLoading(true);
 
+    if (!city || city === "") {
+      Alert.alert("Please enter a valid city name.");
+      return;
+    }
+
     const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=261684320267de715701e47c677a8f05`);
     const data = await response.json();
+
+    if(Number(data.cod) !== 200){
+      Alert.alert("City not found.");
+      return;
+    }
 
     const temperature = Math.round(data.main.temp);
     const description = data.weather[0].description;
@@ -90,6 +99,9 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
    
       }
     );
+
+   
+   
    }
    catch (error) {
     console.error("Error fetching weather:", error);
@@ -101,42 +113,64 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
 
 
   async function fetchForecast(city: string) {
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=261684320267de715701e47c677a8f05`
-    );
-    const data = await response.json();
+    try {
+      setLoading(true);
+      // if (!city || city.trim() === "") {
+      //   Alert.alert("Please enter a valid city name.");
+      //   return;
+      // }
   
-    if (!data.list) {
-      console.log("Forecast API failed:", data);
-      return;
-    }
-    // 1. Keep one entry per day (12:00)
-    const daily = data.list.filter((item: any) =>
-      item.dt_txt.includes("12:00:00")
-    );
 
-    const today = new Date().toISOString().split("T")[0];
-  
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=261684320267de715701e47c677a8f05`
+      );
+      const data = await response.json();
+
+      // if(Number(data.cod) !== 200){
+      //   Alert.alert("City not found.");
+      //   return;
+      // }
     
-    const forecastData = daily.map((item: any) => {
-      const day = new Date(item.dt_txt).toLocaleDateString("en-US", {
-        weekday: "short",
-      });
+      if (!data.list) {
+        console.log("Forecast API failed:", data);
+        return;
+      }
+      // 1. Keep one entry per day (12:00)
+      const daily = data.list.filter((item: any) =>
+        item.dt_txt.includes("12:00:00")
+      );
   
-      return {
-        day,
-        temp: Number(item.main.temp.toFixed(0)),
-        temp_min: Number(item.main.temp_min.toFixed(0)),
-        temp_max: Number(item.main.temp_max.toFixed(0)),
-        description: item.weather[0].description,
-        main: item.weather[0].main
+      const today = new Date().toISOString().split("T")[0];
+    
       
-
-      };
-    });
+      const forecastData = daily.map((item: any) => {
+        const day = new Date(item.dt_txt).toLocaleDateString("en-US", {
+          weekday: "short",
+        });
+    
+        return {
+          day,
+          temp: Number(item.main.temp.toFixed(0)),
+          temp_min: Number(item.main.temp_min.toFixed(0)),
+          temp_max: Number(item.main.temp_max.toFixed(0)),
+          description: item.weather[0].description,
+          main: item.weather[0].main
+        
   
-    // 3. Set array (matches your state type)
-    setForecast(forecastData);
+        };
+      });
+    
+      setForecast(forecastData);
+      
+    }
+    catch (error) {
+      console.error("Error fetching forecast:", error);
+    }
+    finally {
+      setLoading(false);
+    }
+
+   
   }
 
 
@@ -199,6 +233,8 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
   }
 
   async function getLocation(){
+    setLoading(true);
+   
     const { status } = await Location.requestForegroundPermissionsAsync();
 
 
@@ -206,6 +242,8 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
       Alert.alert('Location permission denied');
       return;
     }
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
       const location = await Location.getCurrentPositionAsync();
@@ -227,12 +265,12 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
         {
           city: data.name,
           temp: temperature,
-          temp_min: data.main.temp_min.toFixed(0),
-          temp_max: data.main.temp_max.toFixed(0),
+          temp_min: Number(data.main.temp_min.toFixed(0)),
+          temp_max: Number(data.main.temp_max.toFixed(0)),
           description: descriptionCapitalized,
           humidity: data.main.humidity,
-          windSpeed: data.wind.speed,
-          visibility: data.visibility,
+          windSpeed: Number((data.wind.speed * 3.6).toFixed(1)),
+          visibility: Number((data.visibility / 1000).toFixed(1)),
           main: data.weather[0].main
   
      
@@ -241,6 +279,7 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
 
       setCity(data.name);
       await fetchForecast(data.name);
+      setLoading(false);
     }
     catch (error) {
       Alert.alert('Error getting location');
@@ -256,6 +295,7 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
       case "Clear":
         return ["#4facfe", "#00f2fe"]; // sunny blue
   
+      case "Smoke":  
       case "Clouds":
         return ["#757F9A", "#D7DDE8"]; // cloudy grey
   
@@ -275,7 +315,30 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
   }
 
 
-
+  if (isInitialLoad) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#0B1D3A",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <LottieView
+          source={require("../assets/animations/Loading.json")}
+          autoPlay
+          loop
+          speed={0.8}
+          style={{ width: 150, height: 150 }}
+        />
+  
+        <Text style={{ color: "white", marginTop: 10 }}>
+          Loading weather...
+        </Text>
+      </View>
+    );
+  }
  
 
   return (
@@ -283,7 +346,7 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
      
       <View style={{ flex: 1 }}>
   
-  {/* 🔥 TOP HALF */}
+  {/*  TOP HALF */}
   <View style={{ flex: 1 }}>
 
     <LinearGradient
@@ -305,20 +368,13 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
           position: "absolute",
           width: "100%",
           height: "100%",
-          opacity: 0.3
+          opacity: 0.25
         }}
       />
 
 
     
     )}
-
-{riveUri && (
-  <Rive
-    url={riveUri}
-    style={{ width: 200, height: 200 }}
-  />
-)}
 
     {/* Search */}
     <TextInput
@@ -329,56 +385,75 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
       placeholderTextColor="black"
       backgroundColor="#ffffff"
       onSubmitEditing={() => {
-        fetchWeather();
+        fetchWeather(),
         fetchForecast(city);
       }}
     />
 
+{loading && weather && (
+  <LottieView
+    source={require("../assets/animations/Loading.json")}
+    autoPlay
+    loop
+    style={{
+      position: "absolute",
+      top: 70,
+      left: 15,
+      width: 40,
+      height: 40,
+      opacity: 0.8
+    }}
+  />
+)}
+
     {/* Temp Section */}
-    <View
-  style={{
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center"
-  }}
->
-  <View style={{ alignItems: "center", gap: 5 }}>
-    
-    {/* City */}
-    <Text style={{ color: "#F4A88B", fontSize: 28, top: 25 }}>
-      {weather?.city}
-    </Text>
-
-    {/* Big Temp */}
-    <Text style={styles.bigTemp}>
-      {weather?.temp}{weather ? "°" : ""}
-    </Text>
-
-    {/* Description */}
-    <Text style={styles.environment}>
-      {weather?.description}
-    </Text>
-
-    {/* High / Low */}
-    <View
-      style={{
-        flexDirection: "row",
-        gap: 20,
-        marginTop: 5
-      }}
-    >
-      <Text style={{ color: "#ffffff", fontWeight: "bold", fontSize: 16 }}>
-        H: {weather?.temp_max}°
-      </Text>
-      <Text style={{ color: "#ffffff", fontWeight: "bold", fontSize: 16
-        
-       }}>
-        L: {weather?.temp_min}°
-      </Text>
-    </View>
-
-  </View>
-</View>
+    {weather && (
+       <View
+       style={{
+         flex: 1,
+         justifyContent: "center",
+         alignItems: "center"
+       }}
+     >
+       <View style={{ alignItems: "center", gap: 5 }}>
+         
+         {/* City */}
+         <Text style={{ color: "#F4A88B", fontSize: 28, top: 25 }}>
+           {weather?.city}
+         </Text>
+     
+         {/* Big Temp */}
+         <Text style={styles.bigTemp}>
+           {weather?.temp}{weather ? "°C" : ""}
+         </Text>
+     
+         {/* Description */}
+         <Text style={styles.environment}>
+           {weather?.description}
+         </Text>
+     
+         {/* High / Low */}
+         <View
+           style={{
+             flexDirection: "row",
+             gap: 20,
+             marginTop: 5
+           }}
+         >
+           <Text style={{ color: "#ffffff", fontWeight: "bold", fontSize: 16 }}>
+             H: {weather?.temp_max}°C
+           </Text>
+           <Text style={{ color: "#ffffff", fontWeight: "bold", fontSize: 16
+             
+            }}>
+             L: {weather?.temp_min}°C
+           </Text>
+         </View>
+     
+       </View>
+     </View>
+    )}
+   
 
 
     <LinearGradient
@@ -397,20 +472,24 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
 
   </View>
 
-  {/* 🔥 BOTTOM HALF */}
+  {/* BOTTOM HALF */}
  
   <View style={{
     flex: 1,
     padding: 10,
-    backgroundColor: "#0B1D3A"
+    backgroundColor: "#0B1D3A",
+   
   }}>
 
     {/* Forecast */}
     {weather && (
       <View style={{
-        backgroundColor: "#1C2A44",
+        backgroundColor: "rgba(255,255,255,0.08)",
         borderRadius: 20,
-        padding: 20
+        padding: 15,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.1)"
       }}>
         <View style={{
           flexDirection: "row",
@@ -452,6 +531,7 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
           icon="water-drop"
           label="Humidity"
           value={weather.humidity}
+          type="humidity"
           
         />
 
@@ -459,24 +539,33 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
           icon="air"
           label="Wind Speed"
           value={weather.windSpeed}
+          type="wind"
          
         />
       </View>
+    
+    
+    
+    
     )}
 
     {/* Visibility */}
-    <View style={{
-      flexDirection: "row",
-      marginTop: 10,
-      height: 100
-    }}>
-      <StatCard
-        icon="visibility"
-        label="Visibility"
-        value={weather?.visibility / 1000}
-       
-      />
-    </View>
+    {weather && (
+<View style={{
+  flexDirection: "row",
+  marginTop: 10,
+  height: 100
+}}>
+  <StatCard
+    icon="visibility"
+    label="Visibility"
+    value={weather?.visibility / 1000}
+    type="visibility"
+   
+  />
+</View>
+    )}
+    
 
   </View>
 
@@ -490,20 +579,16 @@ temp_max: Number(data.main.temp_max.toFixed(0)),
 const styles = StyleSheet.create({
 
   input: {
-    borderWidth: 1,
-    borderColor: "black",
-    borderRadius: 20,
+    borderRadius: 25,
     width: "60%",
     marginBottom: 20,
-    padding: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     position: "absolute",
-    top: 50,
+    top: 60,
     right: 10,
+    backgroundColor: "rgba(255,255,255,0.9)",
   opacity: 0.8
-
-  
-    
-
   },
 
   cardHumidity: {
@@ -525,9 +610,11 @@ const styles = StyleSheet.create({
   },
 
   bigTemp: {
-    color: "white",
+    color: "#EAF6FF",
     fontSize: 100,
     fontFamily: "Lato-Black",
+    fontWeight: "300",
+    
     
   },
 
