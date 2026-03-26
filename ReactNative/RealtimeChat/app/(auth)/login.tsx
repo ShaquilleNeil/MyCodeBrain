@@ -1,18 +1,18 @@
-import { View, Text, Button, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { Label } from "@react-navigation/elements";
-import { IconSymbol } from "@/app-example/components/ui/icon-symbol.ios";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { UserAvatar } from "@/src/components/UserAvatar";
+
+// TODO: call auth API on login; then initialize socket / chat state
 
 export default function Login() {
   const router = useRouter();
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
-
-      
-        <Text style={{ fontSize: 30, fontWeight: "800" }} >Welcome Back</Text>
+      <UserAvatar label="?" size={56} />
+      <Text style={{ fontSize: 30, fontWeight: "800", marginTop: 16 }}>Welcome Back</Text>
         <Text style={{ fontSize: 10, marginBottom: 20 }}>Sign in to continue</Text>
 
           {/* Email Label */}
@@ -82,7 +82,7 @@ export default function Login() {
         </TouchableOpacity>
       </View> 
 
-        <Text>Don't have an account? <Text style={{ color: "blue" }} onPress={() => router.push("/(auth)/signup")}>Register</Text></Text>
+        <Text>{"Don't have an account? "}<Text style={{ color: "blue" }} onPress={() => router.push("/(auth)/signup")}>Register</Text></Text>
     </View>
   );
 }

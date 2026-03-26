@@ -1,10 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { UserAvatar } from "@/src/components/UserAvatar";
+
+// TODO: call signup API; validate and navigate to login or main app
 
 export default function Signup() {
     return (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20, gap: 10 }}>
+            <UserAvatar label="+" size={56} />
             <Text style={{ fontSize: 30, fontWeight: "800" }}>Sign up</Text>
             <Text style={{ fontSize: 10, marginBottom: 20 }}>Enter your full name, email and phone number to sign up.</Text>
 
