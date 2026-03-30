@@ -1,0 +1,162 @@
+let currentPage = 1;
+let jobsPerPage = 10;
+let alljobs = [];
+let filteredJobs = [];
+
+async function fetchInternships() {
+    const information = await fetch('https://raw.githubusercontent.com/negarprh/Canadian-Tech-Internships-2026/main/README.md');
+
+    const convertedInformation = await information.text();
+    
+    const lines = convertedInformation.split('\n');
+    
+    const rows = lines.filter(line =>
+        line.startsWith('|') && !line.includes('---') && !line.includes('Company')
+    );
+    
+    
+    const jobs = rows.map(row => {
+        const key = `pk_B06fu8i-SYyR6xP8rBeSSQ`;
+        const columns = row.split('|').map(p => p.trim()).filter(p => p !== "");
+        const rawlinks = columns[3];
+        const url = rawlinks.includes('(') ? rawlinks.split('(')[2].replace(')', '') : null;
+        const lowerCase = columns[0].toLowerCase().replaceAll(" ", "").concat('.com') ;
+    
+        return {
+            company: columns[0],
+            title: columns[1],
+            location: columns[2],
+            link: url,
+            date: columns[4],
+            logo : `https://img.logo.dev/${lowerCase}?token=${key}`
+        }
+        
+    
+    }); 
+
+    return jobs
+}
+
+function renderPages(totalPages){
+const pages = document.getElementById('pages');
+pages.innerHTML = '';   
+
+for (let i = 0; i < totalPages; i++){
+    const btn = document.createElement('button');
+    btn.textContent = i + 1;
+
+    if(i + 1 === currentPage){
+        btn.classList.add('active');
+    }
+
+    btn.addEventListener('click', () => {
+        currentPage = i + 1;
+        loadJobs();
+    })
+
+    pages.appendChild(btn);
+
+};
+}
+
+function isNewJob(datestring){
+    const today = new Date();
+    const jobdate = new Date(datestring);
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(today.getDate() - 5);
+
+    return jobdate >= fiveDaysAgo;
+}
+
+
+async function loadJobs(){
+  
+
+    if (alljobs.length === 0) {
+        alljobs = await fetchInternships();
+    }
+
+      
+      const baseJobs = filteredJobs.length > 0 ? filteredJobs : alljobs;
+      const openjobs = baseJobs.filter(job => job.link !== null);
+
+      const start = (currentPage - 1) * jobsPerPage;
+      const end = start + jobsPerPage;
+      const currentJobs = openjobs.slice(start, end);
+      const jobList = document.getElementById('jobs');
+
+
+
+jobList.innerHTML = `
+${currentJobs.map(job => {
+    const badge = isNewJob(job.date)
+      ? '<span class="badge">NEW</span>'
+      : '';
+  
+    return `
+      <li class="job">
+        <div class="content">
+          <div class="top-row">
+            <img class="logo" src="${job.logo}" onerror="this.onerror=null; this.src='../social4_04.jpg'" />
+            ${badge}
+          </div>
+  
+          <p class="title">${job.title}</p>
+          <p class="company">${job.company}</p>
+          <p class="location">${job.location}</p>
+          <p class="date">${job.date}</p>
+        </div>
+  
+        ${job.link 
+          ? `<a href="${job.link}" target="_blank"><button class="apply">Apply</button></a>` 
+          : '<button class="closed">Closed</button>'}
+      </li>
+    `;
+  }).join('')}
+`;
+
+// document.querySelectorAll('.job').forEach(job => {
+//     job.classList.add('slide-in');
+// })
+
+const totalPages = Math.ceil(openjobs.length / jobsPerPage);
+renderPages(totalPages);
+}
+
+//handling keyboard click
+var input = document.getElementById('searchInput');
+
+input.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById('searchButton').click();
+    }
+});
+
+function searchJobs(){
+    const search = document.getElementById('searchInput').value.toLowerCase();
+
+    if(search === ''){
+        filteredJobs = [];
+        loadJobs();
+        return;
+    }
+
+    filteredJobs = alljobs.filter(job => {
+        const title = job.title.toLowerCase();
+        const company = job.company.toLowerCase();
+        const location = job.location.toLowerCase();
+        const date = job.date.toLowerCase();
+
+        return title.includes(search) || company.includes(search) || location.includes(search) || date.includes(search);
+    });
+
+   currentPage = 1;
+   loadJobs();
+}
+
+loadJobs();
+
+
+
+

@@ -3,16 +3,13 @@ import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Icon from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { UserAvatar } from "@/src/components/UserAvatar";
-
 // TODO: call auth API on login; then initialize socket / chat state
 
 export default function Login() {
   const router = useRouter();
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
-      <UserAvatar label="?" size={56} />
-      <Text style={{ fontSize: 30, fontWeight: "800", marginTop: 16 }}>Welcome Back</Text>
+      <Text style={{ fontSize: 30, fontWeight: "800" }}>Welcome Back</Text>
         <Text style={{ fontSize: 10, marginBottom: 20 }}>Sign in to continue</Text>
 
           {/* Email Label */}

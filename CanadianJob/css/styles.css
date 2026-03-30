@@ -1,0 +1,228 @@
+body {
+    background-color: #e7f1fb;
+    color: rgb(0, 0, 0);
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    padding-bottom: 40px;
+    
+}
+
+.header1::before {
+    content: "";
+    background-color: black;
+    inset: 0;
+    position: absolute;
+    opacity: 0.3;
+    border-radius: 15px;
+}
+
+.header1 {
+    position: relative;
+    color: rgb(255, 255, 255);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 40px;
+    align-items: center;
+    background-image: url('../compagnons-eTgMFFzroGc-unsplash.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 200px;
+   width: 100%;
+}
+
+.header1-content {
+    z-index: 1;
+}
+
+.main-container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px 0;
+
+}
+
+.searchBar{
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    background-color: rgb(255, 255, 255);
+    width: 490px;
+    height: 50px;
+    border-radius: 30px;
+}
+
+.searchBar input{
+    border: none;
+    background: none;
+    margin-left: 20px;
+    flex: 1;
+    height: 50px;
+}
+
+.searchBar input:focus{
+    outline: none;
+}
+
+#searchButton{
+    background-color: blue;
+    color: white;
+    padding: 10px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: transform 0.3s ease;
+}
+
+#searchButton:hover{
+    transform: scale(1.1);
+    background-color: rgb(5, 154, 234);
+    color: #ffffff;
+    border: none;
+}
+
+
+#jobs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+    width: 95%;
+}
+
+
+
+.job {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+    height: 280px; 
+    padding: 26px;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    transition:  transform 0.3s ease;
+}
+
+.job:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.a {
+    
+
+    color: white;
+    text-decoration: none;
+}
+
+
+
+.apply {
+    background-color: #2563EB ;
+    margin-top: auto; 
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    width: 100%;
+}
+
+.closed {
+    background-color: #F8FAFC;
+    color: rgb(134, 134, 134);
+    padding: 10px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    border: none;
+    width: 100%;
+    text-align: center;
+}
+
+.company {
+    font-size: 15px;
+    color: rgb(55, 55, 55);
+}
+
+.title {
+    position: relative;
+    font-weight: bold;
+    font-size: 18px;
+    left: 0;
+    
+}
+
+.location {
+    position: relative;
+    font-size: 12px;
+    left: 0;
+    color: rgb(134, 134, 134);
+}
+
+.date {
+    position: relative;
+    font-size: 12px;
+    left: 0;
+    color: rgb(134, 134, 134);
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    top: 0;
+    left: 0;
+    object-fit: contain;
+    position: relative;
+    border-radius: 10px ;
+}
+   
+#pages {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px;
+
+}
+
+#pages button {
+    padding: 10px 20px;
+    border-radius: 50px;
+    background-color: #2563EB;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#pages button:hover {
+    background-color: #1d4bca;
+    transform: scale(1.1);
+}
+
+#pages button.active {
+    background-color: #062a8b;
+}
+
+.top-row {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    
+}
+
+.badge {
+    position: relative;
+    background-color: #2563EB;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 10px;
+    top: 0;
+    
+}
+
