@@ -4,6 +4,7 @@ body {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     padding-bottom: 40px;
     overflow: hidden;
+    height: 100vh;
 }
 
 .header1::before {
@@ -60,10 +61,12 @@ body {
     margin-left: 20px;
     flex: 1;
     height: 50px;
+    background: transparent;
 }
 
 .searchBar input:focus{
     outline: none;
+    box-shadow: none;
 }
 
 #searchButton{
@@ -186,6 +189,7 @@ body {
     object-fit: contain;
     position: relative;
     border-radius: 18px ;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
    
 #pages {
@@ -244,4 +248,12 @@ body {
   .fade-in {
     opacity: 1;
     transition: opacity 0.5s ease, transform 0.8s ease;
+  }
+
+  .no-jobs {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 28px;
+    color: rgb(0, 0, 0);
   }

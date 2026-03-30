@@ -2,6 +2,7 @@ let currentPage = 1;
 let jobsPerPage = 8;
 let alljobs = [];
 let filteredJobs = [];
+let isSearching = false;
 
 async function fetchInternships() {
     const information = await fetch('https://raw.githubusercontent.com/negarprh/Canadian-Tech-Internships-2026/main/README.md');
@@ -102,7 +103,7 @@ async function loadJobs(){
     }
 
       
-      const baseJobs = filteredJobs.length > 0 ? filteredJobs : alljobs;
+      const baseJobs = isSearching ? filteredJobs : alljobs;
       const openjobs = baseJobs.filter(job => job.link !== null);
     
       const start = (currentPage - 1) * jobsPerPage;
@@ -116,6 +117,11 @@ async function loadJobs(){
 
 
 jobList.innerHTML = `
+
+${currentJobs.length === 0 ? '<p class="no-jobs">No jobs found</p>' : ''}
+
+
+
 ${currentJobs.map(job => {
     const badge = isNewJob(job.date)
       ? '<span class="badge">NEW</span>'
@@ -163,17 +169,24 @@ function searchJobs(){
 
     if(search === ''){
         filteredJobs = [];
+        isSearching = false;
+        currentPage = 1;
         loadJobs();
         return;
     }
 
-    filteredJobs = alljobs.filter(job => {
-        const title = job.title.toLowerCase();
-        const company = job.company.toLowerCase();
-        const location = job.location.toLowerCase();
-        const date = job.date.toLowerCase();
+    isSearching = true;
 
-        return title.includes(search) || company.includes(search) || location.includes(search) || date.includes(search);
+    filteredJobs = alljobs.filter(job => {
+       
+        return (
+            job.title.toLowerCase().includes(search) ||
+            job.company.toLowerCase().includes(search) ||
+            job.location.toLowerCase().includes(search) || 
+            job.date.toLowerCase().includes(search)
+        );
+
+        
     });
 
    currentPage = 1;
