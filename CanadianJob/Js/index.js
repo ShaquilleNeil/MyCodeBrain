@@ -1,5 +1,5 @@
 let currentPage = 1;
-let jobsPerPage = 10;
+let jobsPerPage = 8;
 let alljobs = [];
 let filteredJobs = [];
 
@@ -14,6 +14,8 @@ async function fetchInternships() {
         line.startsWith('|') && !line.includes('---') && !line.includes('Company')
     );
     
+
+    let lastCompany = null;
     
     const jobs = rows.map(row => {
         const key = `pk_B06fu8i-SYyR6xP8rBeSSQ`;
@@ -21,15 +23,25 @@ async function fetchInternships() {
         const rawlinks = columns[3];
         const url = rawlinks.includes('(') ? rawlinks.split('(')[2].replace(')', '') : null;
         const lowerCase = columns[0].toLowerCase().replaceAll(" ", "").concat('.com') ;
+
+        let companyName = columns[0];
+
+        if(companyName === '↳') {
+            companyName = lastCompany;
+        } else {
+            lastCompany = companyName;
+        }
     
         return {
-            company: columns[0],
+            company: companyName,
             title: columns[1],
             location: columns[2],
             link: url,
             date: columns[4],
             logo : `https://img.logo.dev/${lowerCase}?token=${key}`
         }
+
+        
         
     
     }); 
@@ -50,8 +62,21 @@ for (let i = 0; i < totalPages; i++){
     }
 
     btn.addEventListener('click', () => {
-        currentPage = i + 1;
-        loadJobs();
+        const jobs = document.getElementById('jobs');
+
+        jobs.classList.remove('fade-in');
+        jobs.classList.add('fade-out');
+
+        setTimeout(() => {
+            jobs.classList.remove('fade-out');
+
+            void jobs.offsetWidth;
+            jobs.classList.add('fade-in');
+
+            currentPage = i + 1;
+            loadJobs();
+        }, 450);
+       
     })
 
     pages.appendChild(btn);
@@ -79,11 +104,14 @@ async function loadJobs(){
       
       const baseJobs = filteredJobs.length > 0 ? filteredJobs : alljobs;
       const openjobs = baseJobs.filter(job => job.link !== null);
-
+    
       const start = (currentPage - 1) * jobsPerPage;
       const end = start + jobsPerPage;
       const currentJobs = openjobs.slice(start, end);
+      
       const jobList = document.getElementById('jobs');
+
+      console.log(currentJobs);
 
 
 
@@ -93,6 +121,7 @@ ${currentJobs.map(job => {
       ? '<span class="badge">NEW</span>'
       : '';
   
+      console.log(job.company);
     return `
       <li class="job">
         <div class="content">
@@ -114,10 +143,6 @@ ${currentJobs.map(job => {
     `;
   }).join('')}
 `;
-
-// document.querySelectorAll('.job').forEach(job => {
-//     job.classList.add('slide-in');
-// })
 
 const totalPages = Math.ceil(openjobs.length / jobsPerPage);
 renderPages(totalPages);
