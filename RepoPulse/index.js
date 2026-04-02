@@ -17,9 +17,13 @@ document.onload = fetchRepoStats();
 
 async function fetchRepoStats(user){
 
+    // if(user.includes('github.com/')){
+    //     user = user.split('github.com/')[1];
+    // }
+
     if (!user || user.trim() === '') {
     user = 'ShaquilleNeil';
-}
+  }
 
     counts.commits = 0;
     counts.pulls = 0;
@@ -155,9 +159,14 @@ async function fetchRepoStats(user){
 function searchRepo(){
     const input = document.getElementById('search');
     const search = input.value;
-   
-    const user = search.split('/')[3];
+   if(search.includes('github.com/')){
+    const user = search.split('github.com/')[1];
     fetchRepoStats(user);
+   } else {
+    const user = search;
+    fetchRepoStats(user);
+   }
+    
 }
 
 // fetchRepoStats();

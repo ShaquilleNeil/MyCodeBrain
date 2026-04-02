@@ -195,9 +195,13 @@ function showSummary(req){
 function showActivity(req){
     req.events.forEach(event => {
         console.log(`
-${chalk.green(`Type:`)} ${event.type}
-${chalk.green(`Repo:`)} ${event.repo}
-${chalk.green(`Date:`)} ${event.date}
+${chalk.yellow(`================================= ` ) }   
+
+${chalk.green(`📦 Type:`)} ${event.type}
+${chalk.magenta(`🗂️ Repo:`)} ${event.repo}
+${chalk.cyan(`📅 Date:`)} ${event.date}
+
+${chalk.yellow(`=================================` ) }   
         `);
     });
 }
