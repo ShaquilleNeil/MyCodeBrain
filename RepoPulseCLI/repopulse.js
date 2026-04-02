@@ -4,20 +4,17 @@ import chalk from 'chalk';
 const counts = {
     commits: 0,
     pulls: 0,
-    issues: 0
+    issues: 0,
+    reviews: 0,
+    comments: 0,
+    releases: 0
     
-};
-
-const imgSrc = {
-  commit: 'images/code.png',
-  pull: 'images/push.png',
-  issue: 'images/warning.png'
 };
 
 
 
 async function main(){
-    const username = process.argv[2];
+    let username = process.argv[2];
     const command = process.argv[3];
     const limit = process.argv[4];
 
@@ -65,8 +62,12 @@ function runCommand(command, req ){
             showSummary(req);
             break;
         case '--activity':
-            showActivity(req);
-            break;
+                if (req && process.argv[4] === 'pulls') {
+                    showPullsActivity(req);
+                } else {
+                    showActivity(req);
+                }
+                break;
     }
 };
 
@@ -88,11 +89,19 @@ async function fetchRepoStats(user, limit){
         if(event.type === 'PullRequestEvent'){
             counts.pulls++
         }
-        if(event.type === 'IssueEvent'){
+        if(event.type === 'IssuesEvent'){
             counts.issues++
         }
+        if(event.type.includes('Review')){
+            counts.reviews++
+        }
+        if(event.type.includes('Comment')){
+            counts.comments++
+        }
+        if(event.type === 'ReleaseEvent'){
+            counts.releases++
+        }
     })
-
     const events = response.map(
         stuff => {
 
@@ -103,10 +112,20 @@ async function fetchRepoStats(user, limit){
                 case 'PullRequestEvent':
                     stuff.type = 'pull';
                     break;
-                case 'IssueEvent':
+                case 'IssuesEvent':
                     stuff.type = 'issue';
                     break;
+                case 'ReviewEvent':
+                    stuff.type = 'review';
+                    break;
+                case 'CommentEvent':
+                    stuff.type = 'comment';
+                    break;
+                case 'ReleaseEvent':
+                    stuff.type = 'release';
+                    break;
             }
+
 
             const names = stuff.repo.name.split('/')[1];
             const dates = stuff.created_at;
@@ -163,13 +182,13 @@ function help(){
         Usage: repopulse <github-username> <command>
 
         Commands:
-        --help  Shows help
-        --pulls Shows total Pulls
-        --commits Shows total Commits
-        --issues Shows total Issues
-        --summary Shows total Commits, Pulls, and Issues
-        --activity Shows activity
-        --activity <limit> Shows activity with limit
+        --help                  Shows help
+        --pulls                 Shows total Pulls
+        --commits               Shows total Commits
+        --issues                Shows total Issues
+        --summary               Shows total Commits, Pulls, and Issues
+        --activity              Shows activity
+        --activity <limit>      Displays a specific amount 
 
         `);
 }
@@ -190,6 +209,9 @@ function showSummary(req){
     console.log(`🟢 ${chalk.green(`Your total Commits: ${req.counts.commits}`)}`);
     console.log(`🟣 ${chalk.blue(`Your total Pulls: ${req.counts.pulls}`)}`);
     console.log(`🚩 ${chalk.red(`Your total Issues: ${req.counts.issues}`)}`);
+    console.log(`🔵 ${chalk.cyan(`Your total Reviews: ${req.counts.reviews}`)}`);
+    console.log(`🔵 ${chalk.magenta(`Your total Comments: ${req.counts.comments}`)}`);
+    console.log(`🟡 ${chalk.yellow(`Your total Releases: ${req.counts.releases}`)}`);
 }
 
 function showActivity(req){
@@ -203,6 +225,22 @@ ${chalk.cyan(`📅 Date:`)} ${event.date}
 
 ${chalk.yellow(`=================================` ) }   
         `);
+    });
+}
+
+function showPullsActivity(req){
+    req.events.forEach(event => {
+        if(event.type === 'pull'){
+            console.log(`
+${chalk.yellow(`================================= ` ) }   
+
+${chalk.green(`📦 Type:`)} ${event.type}
+${chalk.magenta(`🗂️ Repo:`)} ${event.repo}
+${chalk.cyan(`📅 Date:`)} ${event.date}
+
+${chalk.yellow(`=================================` ) }   
+            `);
+        }
     });
 }
 
