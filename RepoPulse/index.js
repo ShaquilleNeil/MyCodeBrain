@@ -12,7 +12,7 @@ const imgSrc = {
   issue: 'images/warning.png'
 };
 
-
+document.onload = fetchRepoStats();
 
 
 async function fetchRepoStats(user){
@@ -24,7 +24,7 @@ async function fetchRepoStats(user){
     counts.commits = 0;
     counts.pulls = 0;
     counts.issues = 0;
-    
+
     const request = await fetch(`https://api.github.com/users/${user}/events?per_page=100`);
 
     const response = await request.json();
