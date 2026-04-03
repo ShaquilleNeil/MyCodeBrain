@@ -31,9 +31,9 @@ async function fetchRepoStats(user){
     //     user = user.split('github.com/')[1];
     // }
 
-    if (!user || user.trim() === '') {
-    user = 'ShaquilleNeil';
-  }
+//     if (!user || user.trim() === '') {
+//     user = 'ShaquilleNeil';
+//   }
 
     counts.commits = 0;
     counts.pulls = 0;
@@ -111,6 +111,7 @@ async function fetchRepoStats(user){
             const timeOnly = newDate.split(',')[1];
             let branch = '';
             let base = '';
+            let member
             
             if (stuff.type === 'Pull') {
                 branch = stuff.payload.pull_request?.head?.ref || '';
@@ -127,6 +128,9 @@ async function fetchRepoStats(user){
             }
             else if (stuff.type === 'Release'){
                 branch = stuff.payload.release?.target_commitish || '';
+            }
+            else if (stuff.type === 'Member') {
+                branch = stuff.payload.member.login || '';
             }
             else if (stuff.type === 'Review') {
                 branch = stuff.payload.pull_request?.head?.ref || '';
@@ -240,6 +244,8 @@ async function fetchRepoStats(user){
     `;
 
     const feed = document.getElementById('feed');
+    const feedContainer = document.querySelector('.feedContainer');
+    feedContainer.style.display = 'block';
 
     feed.innerHTML = `${events.map(event => `
         <div class="activity-card">

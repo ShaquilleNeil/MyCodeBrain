@@ -234,7 +234,7 @@ function showPullsActivity(req){
             console.log(`
 ${chalk.yellow(`================================= ` ) }   
 
-${chalk.green(`📦 Type:`)} ${event.type}
+${chalk.green(`📦 Type:`)} ${event.type}                                    
 ${chalk.magenta(`🗂️ Repo:`)} ${event.repo}
 ${chalk.cyan(`📅 Date:`)} ${event.date}
 
